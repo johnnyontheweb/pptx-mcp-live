@@ -59,18 +59,14 @@ def register_transition_tools(app, presentations, get_current_presentation_id, v
             
             elif operation == "set":
                 return {
-                    "message": f"Transition setting requested for slide {slide_index}",
-                    "slide_index": slide_index,
-                    "transition_type": transition_type,
-                    "duration": duration,
-                    "note": "Transition setting has limited support in python-pptx - this is a placeholder for future enhancement"
+                    "success": False,
+                    "error": "Not yet implemented: setting slide transitions requires direct OOXML manipulation of the mc:AlternateContent/p:transition element"
                 }
-            
+
             elif operation == "remove":
                 return {
-                    "message": f"Transition removal requested for slide {slide_index}",
-                    "slide_index": slide_index,
-                    "note": "Transition removal has limited support in python-pptx - this is a placeholder for future enhancement"
+                    "success": False,
+                    "error": "Not yet implemented: removing slide transitions requires direct OOXML manipulation"
                 }
             
             else:

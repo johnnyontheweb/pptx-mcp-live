@@ -2,6 +2,7 @@
 Validation utilities for PowerPoint MCP Server.
 Functions for validating and fixing slide content, text fit, and layouts.
 """
+from pptx.util import Pt
 from typing import Dict, List, Optional, Any
 
 
@@ -135,7 +136,7 @@ def validate_and_fix_slide(slide, auto_fix: bool = True, min_font_size: int = 8,
                         for paragraph in shape.text_frame.paragraphs:
                             for run in paragraph.runs:
                                 if hasattr(run, 'font'):
-                                    run.font.size = suggested_size * 12700  # Convert to EMU
+                                    run.font.size = Pt(suggested_size)
                         
                         fix = f"{shape_name}: Adjusted font size to {suggested_size}pt"
                         result['fixes_applied'].append(fix)
@@ -211,9 +212,10 @@ def validate_slide_layout(slide) -> Dict:
             result['issues'].append(f"Found {len(result['overlapping_shapes'])} overlapping shapes")
             result['suggestions'].append("Consider repositioning overlapping shapes")
         
-        # Check for shapes outside slide boundaries
-        slide_width = 10 * 914400  # Standard slide width in EMU
-        slide_height = 7.5 * 914400  # Standard slide height in EMU
+        # Check for shapes outside slide boundaries (read from presentation)
+        prs = slide.part.package.presentation
+        slide_width = prs.slide_width
+        slide_height = prs.slide_height
         
         shapes_outside = []
         for i, shape in enumerate(shapes):

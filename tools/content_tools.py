@@ -551,18 +551,16 @@ def register_content_tools(app: FastMCP, presentations: Dict, get_current_presen
             if operation == "add":
                 if source_type == "base64":
                     # Handle base64 image
+                    temp_path = None
                     try:
                         image_data = base64.b64decode(image_source)
                         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
                             temp_file.write(image_data)
                             temp_path = temp_file.name
-                        
+
                         # Add image from temporary file
                         shape = ppt_utils.add_image(slide, temp_path, left, top, width, height)
-                        
-                        # Clean up temporary file
-                        os.unlink(temp_path)
-                        
+
                         return {
                             "message": f"Added image from base64 to slide {slide_index}",
                             "shape_index": len(slide.shapes) - 1
@@ -571,6 +569,9 @@ def register_content_tools(app: FastMCP, presentations: Dict, get_current_presen
                         return {
                             "error": f"Failed to process base64 image: {str(e)}"
                         }
+                    finally:
+                        if temp_path and os.path.exists(temp_path):
+                            os.unlink(temp_path)
                 else:
                     # Handle file path
                     if not os.path.exists(image_source):

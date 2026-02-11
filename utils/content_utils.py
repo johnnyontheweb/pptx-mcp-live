@@ -5,7 +5,7 @@ Functions for slides, text, images, tables, charts, and shapes.
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.enum.chart import XL_CHART_TYPE
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_AUTO_SIZE
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from typing import Dict, List, Tuple, Optional, Any
@@ -151,13 +151,18 @@ def add_textbox(slide, left: float, top: float, width: float, height: float, tex
     textbox = slide.shapes.add_textbox(
         Inches(left), Inches(top), Inches(width), Inches(height)
     )
-    
-    textbox.text_frame.text = text
-    
+
+    tf = textbox.text_frame
+    tf.text = text
+
+    # Auto-fit text to shape
+    if auto_fit:
+        tf.auto_size = MSO_AUTO_SIZE.BEST_FIT
+
     # Apply formatting if provided
     if any([font_size, font_name, bold, italic, underline, color, bg_color, alignment, vertical_alignment]):
         format_text_advanced(
-            textbox.text_frame,
+            tf,
             font_size=font_size,
             font_name=font_name,
             bold=bold,
@@ -168,7 +173,7 @@ def add_textbox(slide, left: float, top: float, width: float, height: float, tex
             alignment=alignment,
             vertical_alignment=vertical_alignment
         )
-    
+
     return textbox
 
 
@@ -251,15 +256,20 @@ def format_text_advanced(text_frame, font_size: int = None, font_name: str = Non
         
         # Enable text wrapping
         text_frame.word_wrap = True
-        
+
+        # Apply text frame background color
+        if bg_color is not None:
+            text_frame.fill.solid()
+            text_frame.fill.fore_color.rgb = RGBColor(*bg_color)
+
         # Apply formatting to all paragraphs and runs
         for paragraph in text_frame.paragraphs:
             if alignment and alignment in alignment_map:
                 paragraph.alignment = alignment_map[alignment]
-            
+
             for run in paragraph.runs:
                 font = run.font
-                
+
                 if font_size is not None:
                     font.size = Pt(font_size)
                 if font_name is not None:
@@ -273,7 +283,7 @@ def format_text_advanced(text_frame, font_size: int = None, font_name: str = Non
                 if color is not None:
                     r, g, b = color
                     font.color.rgb = RGBColor(r, g, b)
-        
+
         return result
         
     except Exception as e:

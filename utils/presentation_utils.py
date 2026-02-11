@@ -3,18 +3,34 @@ Presentation management utilities for PowerPoint MCP Server.
 Functions for creating, opening, saving, and managing presentations.
 """
 from pptx import Presentation
+from pptx.util import Emu
 from typing import Dict, List, Optional
 import os
 
+# Aspect ratio presets (width, height) in EMU
+ASPECT_RATIOS = {
+    "16:9": (Emu(12192000), Emu(6858000)),   # 13.333" x 7.5"
+    "4:3":  (Emu(9144000), Emu(6858000)),    # 10" x 7.5"
+    "16:10": (Emu(12192000), Emu(7620000)),  # 13.333" x 8.333"
+    "a4":   (Emu(10692000), Emu(7560000)),   # 11.694" x 8.264"
+}
 
-def create_presentation() -> Presentation:
+
+def create_presentation(aspect_ratio: str = "16:9") -> Presentation:
     """
     Create a new PowerPoint presentation.
-    
+
+    Args:
+        aspect_ratio: Slide aspect ratio. One of "16:9" (default), "4:3", "16:10", "a4".
+
     Returns:
         A new Presentation object
     """
-    return Presentation()
+    prs = Presentation()
+    dims = ASPECT_RATIOS.get(aspect_ratio, ASPECT_RATIOS["16:9"])
+    prs.slide_width = dims[0]
+    prs.slide_height = dims[1]
+    return prs
 
 
 def open_presentation(file_path: str) -> Presentation:

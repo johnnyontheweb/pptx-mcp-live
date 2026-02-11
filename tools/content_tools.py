@@ -54,7 +54,9 @@ def register_content_tools(app: FastMCP, presentations: Dict, get_current_presen
                 ppt_utils.set_title(slide, title)
             
             # Apply background if specified
-            if background_type == "gradient" and background_colors and len(background_colors) >= 2:
+            if background_type == "solid" and background_colors and len(background_colors) >= 1:
+                ppt_utils.set_slide_solid_background(slide, background_colors[0])
+            elif background_type == "gradient" and background_colors and len(background_colors) >= 2:
                 ppt_utils.set_slide_gradient_background(
                     slide, background_colors[0], background_colors[1], gradient_direction
                 )

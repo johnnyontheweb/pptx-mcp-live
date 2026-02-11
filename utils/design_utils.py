@@ -6,7 +6,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from typing import Dict, List, Tuple, Optional, Any
-from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
+from PIL import Image, ImageEnhance, ImageFilter
 import tempfile
 import os
 from fontTools.ttLib import TTFont
@@ -267,37 +267,66 @@ def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
         }
 
 
-def set_slide_gradient_background(slide, start_color: Tuple[int, int, int], 
-                                 end_color: Tuple[int, int, int], direction: str = "horizontal") -> None:
+def set_slide_solid_background(slide, color: Tuple[int, int, int]) -> None:
     """
-    Set a gradient background for a slide using a generated image.
-    
+    Set a solid color background for a slide using native OOXML fill.
+
     Args:
         slide: The slide object
-        start_color: Starting RGB color tuple
-        end_color: Ending RGB color tuple
+        color: RGB color tuple (r, g, b)
+    """
+    background = slide.background
+    fill = background.fill
+    fill.solid()
+    fill.fore_color.rgb = RGBColor(*color)
+
+
+def set_slide_gradient_background(slide, start_color: Tuple[int, int, int],
+                                 end_color: Tuple[int, int, int], direction: str = "horizontal") -> None:
+    """
+    Set a gradient background for a slide using native OOXML gradient fill.
+
+    Args:
+        slide: The slide object
+        start_color: Starting RGB color tuple (r, g, b)
+        end_color: Ending RGB color tuple (r, g, b)
         direction: Gradient direction ('horizontal', 'vertical', 'diagonal')
     """
-    try:
-        # Create gradient image
-        width, height = 1920, 1080  # Standard slide dimensions
-        gradient_img = create_gradient_image(width, height, start_color, end_color, direction)
-        
-        # Save to temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
-            gradient_img.save(temp_file.name, 'PNG')
-            temp_path = temp_file.name
-        
-        # Add as background image (simplified - actual implementation would need XML manipulation)
-        try:
-            slide.shapes.add_picture(temp_path, 0, 0, Inches(10), Inches(7.5))
-        finally:
-            # Clean up temporary file
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
-                
-    except Exception:
-        pass  # Graceful fallback
+    from lxml import etree
+
+    # Direction → OOX linear angle in 60000ths of a degree
+    angle_map = {
+        "horizontal": 0,         # left → right
+        "vertical": 5400000,     # top → bottom  (90° × 60000)
+        "diagonal": 2700000,     # top-left → bottom-right (45° × 60000)
+    }
+    angle = angle_map.get(direction, 0)
+
+    background = slide.background
+    fill = background.fill
+    fill.gradient()
+
+    # python-pptx sets a default 2-stop gradient; we replace stops via XML
+    nsmap = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
+    grad_fill = fill._fill  # lxml element <a:gradFill>
+
+    # Remove existing stop list and direction elements
+    for child in list(grad_fill):
+        tag = etree.QName(child).localname
+        if tag in ("gsLst", "lin", "path"):
+            grad_fill.remove(child)
+
+    # Build gradient stop list
+    gs_lst = etree.SubElement(grad_fill, f"{{{nsmap['a']}}}gsLst")
+
+    for pos, rgb in [(0, start_color), (100000, end_color)]:
+        gs = etree.SubElement(gs_lst, f"{{{nsmap['a']}}}gs", attrib={"pos": str(pos)})
+        srgb = etree.SubElement(gs, f"{{{nsmap['a']}}}srgbClr",
+                                attrib={"val": f"{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"})
+
+    # Set linear direction
+    etree.SubElement(grad_fill, f"{{{nsmap['a']}}}lin",
+                     attrib={"ang": str(angle), "scaled": "1"})
 
 
 def create_professional_gradient_background(slide, color_scheme: str = 'modern_blue', 
@@ -323,50 +352,6 @@ def create_professional_gradient_background(slide, color_scheme: str = 'modern_b
         end_color = get_professional_color(color_scheme, 'accent2')
     
     set_slide_gradient_background(slide, start_color, end_color, direction)
-
-
-def create_gradient_image(width: int, height: int, start_color: Tuple[int, int, int], 
-                         end_color: Tuple[int, int, int], direction: str = 'horizontal') -> Image.Image:
-    """
-    Create a gradient image using PIL.
-    
-    Args:
-        width: Image width in pixels
-        height: Image height in pixels
-        start_color: Starting RGB color tuple
-        end_color: Ending RGB color tuple
-        direction: Gradient direction
-        
-    Returns:
-        PIL Image object with gradient
-    """
-    img = Image.new('RGB', (width, height))
-    draw = ImageDraw.Draw(img)
-    
-    if direction == 'horizontal':
-        for x in range(width):
-            ratio = x / width
-            r = int(start_color[0] * (1 - ratio) + end_color[0] * ratio)
-            g = int(start_color[1] * (1 - ratio) + end_color[1] * ratio)
-            b = int(start_color[2] * (1 - ratio) + end_color[2] * ratio)
-            draw.line([(x, 0), (x, height)], fill=(r, g, b))
-    elif direction == 'vertical':
-        for y in range(height):
-            ratio = y / height
-            r = int(start_color[0] * (1 - ratio) + end_color[0] * ratio)
-            g = int(start_color[1] * (1 - ratio) + end_color[1] * ratio)
-            b = int(start_color[2] * (1 - ratio) + end_color[2] * ratio)
-            draw.line([(0, y), (width, y)], fill=(r, g, b))
-    else:  # diagonal
-        for x in range(width):
-            for y in range(height):
-                ratio = (x + y) / (width + height)
-                r = int(start_color[0] * (1 - ratio) + end_color[0] * ratio)
-                g = int(start_color[1] * (1 - ratio) + end_color[1] * ratio)
-                b = int(start_color[2] * (1 - ratio) + end_color[2] * ratio)
-                img.putpixel((x, y), (r, g, b))
-    
-    return img
 
 
 def format_shape(shape, fill_color: Tuple[int, int, int] = None, 

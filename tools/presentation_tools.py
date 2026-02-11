@@ -17,10 +17,15 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             title="Create Presentation",
         ),
     )
-    def create_presentation(id: Optional[str] = None) -> Dict:
-        """Create a new PowerPoint presentation."""
+    def create_presentation(id: Optional[str] = None, aspect_ratio: str = "16:9") -> Dict:
+        """Create a new PowerPoint presentation.
+
+        Args:
+            id: Optional presentation ID
+            aspect_ratio: Slide aspect ratio — "16:9" (default), "4:3", "16:10", or "a4"
+        """
         # Create a new presentation
-        pres = ppt_utils.create_presentation()
+        pres = ppt_utils.create_presentation(aspect_ratio=aspect_ratio)
         
         # Generate an ID if not provided
         if id is None:

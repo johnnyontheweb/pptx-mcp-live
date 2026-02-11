@@ -48,6 +48,7 @@ __all__ = [
     "enhance_existing_slide",
     "apply_professional_image_enhancement",
     "enhance_image_with_pillow",
+    "set_slide_solid_background",
     "set_slide_gradient_background",
     "create_professional_gradient_background",
     "format_shape",

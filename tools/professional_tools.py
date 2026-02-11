@@ -70,12 +70,14 @@ def register_professional_tools(app: FastMCP, presentations: Dict, get_current_p
             
             elif operation == "theme":
                 # Apply professional theme
-                ppt_utils.apply_professional_theme(
+                result = ppt_utils.apply_professional_theme(
                     pres,
                     color_scheme=color_scheme,
                     apply_to_existing=apply_to_existing
                 )
-                
+                if isinstance(result, dict) and result.get("success") is False:
+                    return result
+
                 return {
                     "message": f"Applied {color_scheme} theme to presentation",
                     "color_scheme": color_scheme,
@@ -103,7 +105,9 @@ def register_professional_tools(app: FastMCP, presentations: Dict, get_current_p
                     enhance_shapes=enhance_shapes,
                     enhance_charts=enhance_charts
                 )
-                
+                if isinstance(result, dict) and result.get("success") is False:
+                    return result
+
                 return {
                     "message": f"Enhanced slide {slide_index} with {color_scheme} scheme",
                     "slide_index": slide_index,
@@ -161,10 +165,17 @@ def register_professional_tools(app: FastMCP, presentations: Dict, get_current_p
             warnings = []
             
             # Apply each effect
+            # Helper to check if an effect function returned an error
+            def _apply_effect(effect_name, result):
+                if isinstance(result, dict) and result.get("success") is False:
+                    warnings.append(f"{effect_name}: {result.get('error', 'unknown error')}")
+                else:
+                    applied_effects.append(effect_name)
+
             for effect_type, effect_params in effects.items():
                 try:
                     if effect_type == "shadow":
-                        ppt_utils.apply_picture_shadow(
+                        r = ppt_utils.apply_picture_shadow(
                             shape,
                             shadow_type=effect_params.get("shadow_type", "outer"),
                             blur_radius=effect_params.get("blur_radius", 4.0),
@@ -173,68 +184,68 @@ def register_professional_tools(app: FastMCP, presentations: Dict, get_current_p
                             color=effect_params.get("color", [0, 0, 0]),
                             transparency=effect_params.get("transparency", 0.6)
                         )
-                        applied_effects.append("shadow")
-                    
+                        _apply_effect("shadow", r)
+
                     elif effect_type == "reflection":
-                        ppt_utils.apply_picture_reflection(
+                        r = ppt_utils.apply_picture_reflection(
                             shape,
                             size=effect_params.get("size", 0.5),
                             transparency=effect_params.get("transparency", 0.5),
                             distance=effect_params.get("distance", 0.0),
                             blur=effect_params.get("blur", 4.0)
                         )
-                        applied_effects.append("reflection")
-                    
+                        _apply_effect("reflection", r)
+
                     elif effect_type == "glow":
-                        ppt_utils.apply_picture_glow(
+                        r = ppt_utils.apply_picture_glow(
                             shape,
                             size=effect_params.get("size", 5.0),
                             color=effect_params.get("color", [0, 176, 240]),
                             transparency=effect_params.get("transparency", 0.4)
                         )
-                        applied_effects.append("glow")
-                    
+                        _apply_effect("glow", r)
+
                     elif effect_type == "soft_edges":
-                        ppt_utils.apply_picture_soft_edges(
+                        r = ppt_utils.apply_picture_soft_edges(
                             shape,
                             radius=effect_params.get("radius", 2.5)
                         )
-                        applied_effects.append("soft_edges")
-                    
+                        _apply_effect("soft_edges", r)
+
                     elif effect_type == "rotation":
-                        ppt_utils.apply_picture_rotation(
+                        r = ppt_utils.apply_picture_rotation(
                             shape,
                             rotation=effect_params.get("rotation", 0.0)
                         )
-                        applied_effects.append("rotation")
-                    
+                        _apply_effect("rotation", r)
+
                     elif effect_type == "transparency":
-                        ppt_utils.apply_picture_transparency(
+                        r = ppt_utils.apply_picture_transparency(
                             shape,
                             transparency=effect_params.get("transparency", 0.0)
                         )
-                        applied_effects.append("transparency")
-                    
+                        _apply_effect("transparency", r)
+
                     elif effect_type == "bevel":
-                        ppt_utils.apply_picture_bevel(
+                        r = ppt_utils.apply_picture_bevel(
                             shape,
                             bevel_type=effect_params.get("bevel_type", "circle"),
                             width=effect_params.get("width", 6.0),
                             height=effect_params.get("height", 6.0)
                         )
-                        applied_effects.append("bevel")
-                    
+                        _apply_effect("bevel", r)
+
                     elif effect_type == "filter":
-                        ppt_utils.apply_picture_filter(
+                        r = ppt_utils.apply_picture_filter(
                             shape,
                             filter_type=effect_params.get("filter_type", "none"),
                             intensity=effect_params.get("intensity", 0.5)
                         )
-                        applied_effects.append("filter")
-                    
+                        _apply_effect("filter", r)
+
                     else:
                         warnings.append(f"Unknown effect type: {effect_type}")
-                
+
                 except Exception as e:
                     warnings.append(f"Failed to apply {effect_type} effect: {str(e)}")
             

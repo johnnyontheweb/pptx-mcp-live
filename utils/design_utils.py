@@ -274,7 +274,8 @@ def set_slide_gradient_background(slide, start_color: Tuple[int, int, int],
 
     # python-pptx sets a default 2-stop gradient; we replace stops via XML
     nsmap = {"a": "http://schemas.openxmlformats.org/drawingml/2006/main"}
-    grad_fill = fill._fill  # lxml element <a:gradFill>
+    # fill._fill is a _GradFill wrapper; ._gradFill is the raw lxml <a:gradFill>
+    grad_fill = fill._fill._gradFill
 
     # Remove existing stop list and direction elements
     for child in list(grad_fill):

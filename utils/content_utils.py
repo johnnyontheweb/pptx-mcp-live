@@ -157,7 +157,7 @@ def add_textbox(slide, left: float, top: float, width: float, height: float, tex
 
     # Auto-fit text to shape
     if auto_fit:
-        tf.auto_size = MSO_AUTO_SIZE.BEST_FIT
+        tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
 
     # Apply formatting if provided
     if any([font_size, font_name, bold, italic, underline, color, bg_color, alignment, vertical_alignment]):

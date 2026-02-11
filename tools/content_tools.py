@@ -326,7 +326,11 @@ def register_content_tools(app: FastMCP, presentations: Dict, get_current_presen
         max_font_size: int = 72,
         presentation_id: Optional[str] = None
     ) -> Dict:
-        """Unified text management tool for adding, formatting, validating text, and formatting multiple text runs."""
+        """Unified text management tool for adding, formatting, validating text, and formatting multiple text runs.
+
+        Position and size parameters (left, top, width, height) are in inches.
+        For a standard 16:9 slide the canvas is 13.333" wide x 7.5" tall.
+        """
         pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
         
         if pres_id is None or pres_id not in presentations:
@@ -530,7 +534,10 @@ def register_content_tools(app: FastMCP, presentations: Dict, get_current_presen
         output_path: Optional[str] = None,
         presentation_id: Optional[str] = None
     ) -> Dict:
-        """Unified image management tool for adding and enhancing images."""
+        """Unified image management tool for adding and enhancing images.
+
+        Position and size parameters (left, top, width, height) are in inches.
+        """
         pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
         
         if pres_id is None or pres_id not in presentations:

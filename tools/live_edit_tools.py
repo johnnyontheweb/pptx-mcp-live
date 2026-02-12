@@ -3,8 +3,12 @@ Live editing tools using PowerPoint COM automation (Windows only).
 These work even when the file is locked/open in PowerPoint.
 """
 import json
+import os
 import sys
 from typing import Optional
+
+DEFAULT_AUTHOR = os.environ.get("MCP_AUTHOR", "Author")
+DEFAULT_INITIALS = os.environ.get("MCP_AUTHOR_INITIALS", "")
 
 
 def register_live_edit_tools(app):
@@ -319,8 +323,8 @@ def register_live_edit_tools(app):
         slide_index: int,
         text: str,
         filename: Optional[str] = None,
-        author: str = "Av. Y\u00fcce Karapazar",
-        author_initials: str = "YK",
+        author: str = DEFAULT_AUTHOR,
+        author_initials: str = DEFAULT_INITIALS,
         left: float = 0,
         top: float = 0,
     ) -> str:

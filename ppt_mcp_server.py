@@ -19,8 +19,20 @@ from tools import (
     register_chart_tools,
     register_connector_tools,
     register_master_tools,
-    register_transition_tools
+    register_transition_tools,
+    register_live_read_tools,
+    register_live_edit_tools,
+    register_live_format_tools,
+    register_live_export_tools,
+    register_screen_capture_tools,
 )
+
+# Install locked-file detection hook for python-pptx
+try:
+    from utils.path_utils import install_pptx_path_hook
+    install_pptx_path_hook()
+except Exception:
+    pass
 
 # Initialize the FastMCP server
 app = FastMCP(
@@ -324,6 +336,12 @@ register_transition_tools(
     is_valid_rgb
 )
 
+# ---- COM Live Tools (Windows only) ----
+register_live_read_tools(app)
+register_live_edit_tools(app)
+register_live_format_tools(app)
+register_live_export_tools(app)
+register_screen_capture_tools(app)
 
 # ---- Additional Utility Tools ----
 
